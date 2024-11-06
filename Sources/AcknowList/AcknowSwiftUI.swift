@@ -33,15 +33,12 @@ public struct AcknowSwiftUIView: View {
     public var body: some View {
         #if os(macOS)
             ScrollView {
-                VStack(alignment: .leading) {
-                    HStack {
-                        Spacer()
-                        Text(acknowledgement.title)
-                            .font(.title)
-                            .padding()
-                            .selectable()
-                        Spacer()
-                    }
+                VStack {
+                    Text(acknowledgement.title)
+                        .font(.title)
+                        .padding()
+                        .selectable()
+
                     if let repositoryURL = acknowledgement.repository {
                         LinkText(url: repositoryURL)
                             .padding()
@@ -58,7 +55,7 @@ public struct AcknowSwiftUIView: View {
             }
         #else
             ScrollView {
-                VStack(alignment: .leading) {
+                VStack {
                     if let repositoryURL = acknowledgement.repository {
                         LinkText(url: repositoryURL)
                             .padding()
