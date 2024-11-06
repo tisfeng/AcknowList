@@ -32,41 +32,65 @@ public struct AcknowSwiftUIView: View {
 
     public var body: some View {
         #if os(macOS)
-        ScrollView {
-            Text(acknowledgement.title)
-                .font(.title)
-                .padding()
-            Text(acknowledgement.text ?? "")
-                .font(.body)
-                .padding()
-        }
-        .onAppear {
-            fetchLicenseIfNecessary()
-        }
+            ScrollView {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Spacer()
+                        Text(acknowledgement.title)
+                            .font(.title)
+                            .padding()
+                            .selectable()
+                        Spacer()
+                    }
+                    if let repositoryURL = acknowledgement.repository {
+                        LinkText(url: repositoryURL)
+                            .padding()
+                    }
+
+                    Text(acknowledgement.text ?? "")
+                        .font(.body)
+                        .padding()
+                        .selectable()
+                }
+            }
+            .onAppear {
+                fetchLicenseIfNecessary()
+            }
         #else
-        ScrollView {
-            Text(acknowledgement.text ?? "")
-                .font(.body)
-                .padding()
-        }
-        .navigationBarTitle(acknowledgement.title)
-        .onAppear {
-            fetchLicenseIfNecessary()
-        }
+            ScrollView {
+                VStack(alignment: .leading) {
+                    if let repositoryURL = acknowledgement.repository {
+                        LinkText(url: repositoryURL)
+                            .padding()
+                    }
+
+                    Text(acknowledgement.text ?? "")
+                        .font(.body)
+                        .padding()
+                        .selectable()
+                }
+            }
+            .navigationBarTitle(acknowledgement.title)
+            .onAppear {
+                fetchLicenseIfNecessary()
+            }
         #endif
     }
 
     private func fetchLicenseIfNecessary() {
         guard acknowledgement.text == nil,
-              let repository = acknowledgement.repository,
-              GitHubAPI.isGitHubRepository(repository) else {
+            let repository = acknowledgement.repository,
+            GitHubAPI.isGitHubRepository(repository)
+        else {
             return
         }
 
         GitHubAPI.getLicense(for: repository) { result in
             switch result {
             case .success(let text):
-                acknowledgement = Acknow(title: acknowledgement.title, text: text, license: acknowledgement.license, repository: acknowledgement.repository)
+                acknowledgement = Acknow(
+                    title: acknowledgement.title, text: text, license: acknowledgement.license,
+                    repository: acknowledgement.repository)
 
             case .failure:
                 repository.openWithDefaultBrowser()
@@ -78,14 +102,14 @@ public struct AcknowSwiftUIView: View {
 @available(iOS 13.0.0, macOS 10.15.0, watchOS 7.0.0, tvOS 13.0.0, visionOS 1.0.0, *)
 struct AcknowSwiftUI_Previews: PreviewProvider {
     static let license = """
-    Copyright (c) 2015-2024 Vincent Tourraine (https://www.vtourraine.net)
+        Copyright (c) 2015-2024 Vincent Tourraine (https://www.vtourraine.net)
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    """
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        """
     static let ack = Acknow(title: "License", text: license)
 
     static var previews: some View {
@@ -108,5 +132,35 @@ struct AcknowSwiftUI_Previews: PreviewProvider {
             AcknowSwiftUIView(acknowledgement: ack)
         }
         .previewDevice(PreviewDevice(rawValue: "Mac"))
+    }
+}
+
+extension View {
+    func selectable() -> some View {
+        if #available(iOS 15.0, macOS 12.0, *) {
+            return AnyView(self.textSelection(.enabled))
+        } else {
+            return AnyView(self)
+        }
+    }
+}
+
+/// LinkText, like system Link, but for lower deployment targets
+struct LinkText: View {
+    init(url: URL, title: String? = nil) {
+        self.url = url
+        self.title = title ?? url.absoluteString
+    }
+
+    let url: URL
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .foregroundColor(.blue)
+            .underline()
+            .onTapGesture {
+                url.openWithDefaultBrowser()
+            }
     }
 }
