@@ -36,12 +36,16 @@ open class AcknowPackageDecoder: AcknowDecoder {
     public func decode(from data: Data) throws -> AcknowList {
         let decoder = JSONDecoder()
         if let root = try? decoder.decode(JSONV1Root.self, from: data) {
-            let acknows = root.object.pins.map { Acknow(title: $0.package, repository: URL(string: $0.repositoryURL)) }
+            let acknows = root.object.pins.map {
+                Acknow(title: $0.package, repository: URL(string: $0.repositoryURL))
+            }
             return AcknowList(headerText: nil, acknowledgements: acknows, footerText: nil)
         }
 
         let root = try decoder.decode(JSONV2Root.self, from: data)
-        let acknows =  root.pins.map { Acknow(title: $0.identity, repository: URL(string: $0.location)) }
+        let acknows = root.pins.map {
+            Acknow(title: $0.identity, repository: URL(string: $0.location))
+        }
         return AcknowList(headerText: nil, acknowledgements: acknows, footerText: nil)
     }
 

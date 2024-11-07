@@ -32,7 +32,9 @@ open class GitHubAPI {
         - repository: The GitHub URL for the repository. For example: `https://github.com/vtourraine/AcknowList.git`
         - completionHandler: The completion handler to call when the load request is complete. This handler is executed on the main queue. It takes a `Result` parameter, with either the body of the license, or an error object that indicates why the request failed.
      */
-    @discardableResult public static func getLicense(for repository: URL, completionHandler: @escaping (Result<String, Error>) -> Void) -> URLSessionDataTask {
+    @discardableResult public static func getLicense(
+        for repository: URL, completionHandler: @escaping (Result<String, Error>) -> Void
+    ) -> URLSessionDataTask {
         // GitHub API documentation
         // https://docs.github.com/en/rest/licenses/licenses#get-the-license-for-a-repository
 
@@ -40,11 +42,11 @@ open class GitHubAPI {
         let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             DispatchQueue.main.async {
                 if (response as? HTTPURLResponse)?.statusCode == 200,
-                   let data,
-                   let text = String(data: data, encoding: .utf8) {
+                    let data,
+                    let text = String(data: data, encoding: .utf8)
+                {
                     completionHandler(.success(text))
-                }
-                else {
+                } else {
                     completionHandler(.failure(error ?? URLError(URLError.Code.unknown)))
                 }
             }
@@ -52,6 +54,21 @@ open class GitHubAPI {
 
         task.resume()
         return task
+    }
+
+    public static func getLicense(for repository: URL) async throws -> String {
+        let request = getLicenseRequest(for: repository)
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+
+        guard let licenseContent = String(data: data, encoding: .utf8) else {
+            throw URLError(.cannotDecodeContentData)
+        }
+
+        return licenseContent
     }
 
     /**
@@ -64,11 +81,12 @@ open class GitHubAPI {
 
     internal static func getLicenseRequest(for repository: URL) -> URLRequest {
         let path = pathWithoutExtension(for: repository)
-        let url  = "https://api.github.com/repos\(path)/license"
+        let url = "https://api.github.com/repos\(path)/license"
         var request = URLRequest(url: URL(string: url)!)
         request.allHTTPHeaderFields = [
             "Accept": "application/vnd.github.raw",
-            "X-GitHub-Api-Version": "2022-11-28"]
+            "X-GitHub-Api-Version": "2022-11-28",
+        ]
         return request
     }
 

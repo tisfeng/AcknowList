@@ -24,16 +24,16 @@
 import Foundation
 
 /// Represents a single acknowledgement.
-public struct Acknow {
+public class Acknow {
 
     /// The acknowledgement title (for instance: the pod or package’s name).
     public let title: String
 
     /// The acknowledgement body text (for instance: the pod’s license).
-    public let text: String?
+    public var text: String?
 
     /// The acknowledgement license (for instance the pod’s license type).
-    public let license: String?
+    public var license: String?
 
     /// The repository URL (for instance the package’s repository).
     public let repository: URL?
@@ -44,10 +44,34 @@ public struct Acknow {
     ///   - title: The acknowledgement title (for instance: the pod’s name).
     ///   - text: The acknowledgement body text (for instance: the pod’s license).
     ///   - license: The acknowledgement license (for instance the pod’s license type).
-    public init(title: String, text: String? = nil, license: String? = nil, repository: URL? = nil) {
+    public init(title: String, text: String? = nil, license: String? = nil, repository: URL? = nil)
+    {
         self.title = title
         self.text = text
         self.license = license
         self.repository = repository
+    }
+}
+
+/// Update Acknow license from GitHub
+extension Acknow {
+    func updateLicense() async throws {
+        guard let repository = repository else { return }
+        text = try await GitHubAPI.getLicense(for: repository)
+    }
+}
+
+/// Update AcknowList licenses from GitHub
+extension [Acknow] {
+    func updateLicenses() async throws {
+        let acknows = self
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for acknow in acknows {
+                group.addTask {
+                    try await acknow.updateLicense()
+                }
+            }
+            try await group.waitForAll()
+        }
     }
 }

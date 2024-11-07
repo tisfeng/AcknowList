@@ -43,11 +43,9 @@ open class AcknowParser {
         let infoDictionary = Bundle.main.infoDictionary
         if let cfBundleName = infoDictionary?["CFBundleName"] as? String {
             return cfBundleName
-        }
-        else if let cfBundleExecutable = infoDictionary?["CFBundleExecutable"] as? String {
+        } else if let cfBundleExecutable = infoDictionary?["CFBundleExecutable"] as? String {
             return cfBundleExecutable
-        }
-        else {
+        } else {
             return nil
         }
     }
@@ -64,8 +62,7 @@ open class AcknowParser {
             // If have both pods and packages libraries, remove the footer text from the pods.
             acknowList.footerText = nil
             return acknowList
-        }
-        else {
+        } else {
             return pods ?? packages
         }
     }
@@ -81,8 +78,11 @@ open class AcknowParser {
 
         let plistName = "Pods-\(bundleName)-acknowledgements"
 
-        guard let url = Bundle.main.url(forResource: plistName, withExtension: K.DefaultPods.fileExtension),
-              let data = try? Data(contentsOf: url) else {
+        guard
+            let url = Bundle.main.url(
+                forResource: plistName, withExtension: K.DefaultPods.fileExtension),
+            let data = try? Data(contentsOf: url)
+        else {
             return nil
         }
 
@@ -96,8 +96,12 @@ open class AcknowParser {
      - Returns: a `AcknowList` instance, or `nil` if no valid `Package.resolved` was found.
      */
     open class func defaultPackages() -> AcknowList? {
-        guard let url = Bundle.main.url(forResource: K.DefaultPackages.fileName, withExtension: K.DefaultPackages.fileExtension),
-              let data = try? Data(contentsOf: url) else {
+        guard
+            let url = Bundle.main.url(
+                forResource: K.DefaultPackages.fileName,
+                withExtension: K.DefaultPackages.fileExtension),
+            let data = try? Data(contentsOf: url)
+        else {
             return nil
         }
 
@@ -115,8 +119,10 @@ open class AcknowParser {
         let types: NSTextCheckingResult.CheckingType = [.link]
 
         guard let linkDetector = try? NSDataDetector(types: types.rawValue),
-            let firstLink = linkDetector.firstMatch(in: text, options: [], range: NSMakeRange(0, text.count)) else {
-                return nil
+            let firstLink = linkDetector.firstMatch(
+                in: text, options: [], range: NSMakeRange(0, text.count))
+        else {
+            return nil
         }
 
         return firstLink.url
@@ -142,7 +148,8 @@ open class AcknowParser {
         //    (\h)*   Matches and captures zero or more horizontal spaces (leading newlines)
         //    (?=.)   Positive lookahead matching any non-newline character (matches but does not capture)
         let singleNewLineFinder = try! NSRegularExpression(pattern: "(?<=.)(\\h)*(\\R)(\\h)*(?=.)")
-        return singleNewLineFinder.stringByReplacingMatches(in: text, range: NSRange(0..<text.count), withTemplate: " ")
+        return singleNewLineFinder.stringByReplacingMatches(
+            in: text, range: NSRange(0..<text.count), withTemplate: " ")
     }
 
     internal struct K {
