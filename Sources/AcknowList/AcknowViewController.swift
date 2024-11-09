@@ -89,9 +89,19 @@ open class AcknowViewController: UIViewController {
             updateTextViewInsets(textView)
         }
 
+        var text = ""
+
         // Need to set the textView text after the layout is completed, so that the content inset and offset properties can be adjusted automatically.
         if let acknowledgement = acknowledgement {
-            textView?.text = acknowledgement.text
+            if let repositoryURL = acknowledgement.repository?.absoluteString {
+                text += repositoryURL + "\n\n"
+            }
+
+            if let textAcknowledgement = acknowledgement.text {
+                text += textAcknowledgement
+            }
+
+            textView?.text = text
         }
     }
 
