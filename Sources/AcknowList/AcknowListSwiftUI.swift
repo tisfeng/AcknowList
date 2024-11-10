@@ -53,12 +53,6 @@ public struct AcknowListSwiftUIView: View {
         self.acknowledgements = acknowledgements
         self.headerText = headerText
         self.footerText = footerText
-
-        // Fetch licenses from the GitHub API
-        let acks = acknowledgements
-        Task {
-            try? await acks.updateLicenses()
-        }
     }
 
     public init(plistFileURL: URL) {
@@ -138,11 +132,13 @@ public struct AcknowListRowSwiftUIView: View {
         if acknowledgement.text != nil
             || canFetchLicenseFromGitHubAndIsGitHubRepository(acknowledgement)
         {
-            NavigationLink(destination: AcknowSwiftUIView(acknowledgement: acknowledgement)) {
+            NavigationLink {
+                AcknowSwiftUIView(acknowledgement: acknowledgement)
+            } label: {
                 Text(acknowledgement.title)
             }
         } else if let repository = acknowledgement.repository,
-            canOpenRepository(for: repository)
+                  canOpenRepository(for: repository)
         {
             Button(action: {
                 repository.openWithDefaultBrowser()

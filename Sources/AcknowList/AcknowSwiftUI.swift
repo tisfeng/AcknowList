@@ -28,7 +28,7 @@ import SwiftUI
 public struct AcknowSwiftUIView: View {
 
     /// The represented acknowledgement.
-    @State public var acknowledgement: Acknow
+    @ObservedObject public var acknowledgement: Acknow
 
     public var body: some View {
         #if os(macOS)
@@ -82,14 +82,11 @@ public struct AcknowSwiftUIView: View {
             return
         }
 
-        GitHubAPI.getLicense(for: repository) { result in
-            switch result {
-            case .success(let text):
-                acknowledgement = Acknow(
-                    title: acknowledgement.title, text: text, license: acknowledgement.license,
-                    repository: acknowledgement.repository)
-
-            case .failure:
+        Task {
+            do {
+                try await acknowledgement.updateLicense()
+            } catch {
+                print("Failed to fetch license: ", error)
                 repository.openWithDefaultBrowser()
             }
         }
