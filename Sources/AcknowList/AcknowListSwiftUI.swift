@@ -57,19 +57,6 @@ public struct AcknowListSwiftUIView: View {
         self.acknowledgements = acknowledgements
         self.headerText = headerText
         self.footerText = footerText
-
-        /**
-         The primary rate limit for unauthenticated requests is 60 requests per hour.
-
-         https://docs.github.com/zh/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#primary-rate-limit-for-unauthenticated-users
-
-         So, we try to fetch first 10 acknowledgements' licenses from the GitHub API.
-         */
-
-        let first10Acknowss = Array(acknowledgements.prefix(10))
-        Task {
-            try? await first10Acknowss.updateLicenses()
-        }
     }
 
     public init(plistFileURL: URL) {
@@ -149,11 +136,13 @@ public struct AcknowListRowSwiftUIView: View {
         if acknowledgement.text != nil
             || canFetchLicenseFromGitHubAndIsGitHubRepository(acknowledgement)
         {
-            NavigationLink(destination: AcknowSwiftUIView(acknowledgement: acknowledgement)) {
+            NavigationLink {
+                AcknowSwiftUIView(acknowledgement: acknowledgement)
+            } label: {
                 Text(acknowledgement.title)
             }
         } else if let repository = acknowledgement.repository,
-            canOpenRepository(for: repository)
+                  canOpenRepository(for: repository)
         {
             Button(action: {
                 repository.openWithDefaultBrowser()

@@ -24,16 +24,16 @@
 import Foundation
 
 /// Represents a single acknowledgement.
-public class Acknow {
+public class Acknow: ObservableObject {
 
     /// The acknowledgement title (for instance: the pod or package’s name).
     public let title: String
 
     /// The acknowledgement body text (for instance: the pod’s license).
-    public var text: String?
+    @Published public var text: String?
 
     /// The acknowledgement license (for instance the pod’s license type).
-    public var license: String?
+    @Published public var license: String?
 
     /// The repository URL (for instance the package’s repository).
     public let repository: URL?
@@ -53,17 +53,20 @@ public class Acknow {
     }
 }
 
-/// Update Acknow license from GitHub
 extension Acknow {
-    func updateLicense() async throws {
+    @MainActor
+    public func updateLicense() async throws {
         guard let repository = repository else { return }
         text = try await GitHubAPI.getLicense(for: repository)
     }
 }
 
-/// Update AcknowList licenses from GitHub
+
 extension [Acknow] {
-    func updateLicenses() async throws {
+    /// Update AcknowList licenses from GitHub
+    ///
+    /// - Important: GitHub API primary rate limit for unauthenticated requests is 60 requests per hour. https://docs.github.com/zh/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#primary-rate-limit-for-unauthenticated-users
+    public func updateLicenses() async throws {
         let acknows = self
         try await withThrowingTaskGroup(of: Void.self) { group in
             for acknow in acknows {
